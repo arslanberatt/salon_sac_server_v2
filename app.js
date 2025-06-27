@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(__dirname));
+app.use("/api/uploads", express.static(__dirname));
 
 app.use(cors(corsOptions));
 app.use("/api", router);
