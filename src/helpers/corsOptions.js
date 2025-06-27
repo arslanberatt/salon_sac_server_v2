@@ -1,4 +1,4 @@
-const whiteList = ["http://localhost:3000"];
+const whiteList = ["https://salonsacserverv2-production.up.railway.app"];
 const corsOptions = (req, callback) => {
   let corsOpt;
   if (whiteList.indexOf(req.header("Origin")) !== -1) {
