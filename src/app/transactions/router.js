@@ -1,10 +1,11 @@
 const router = require("express").Router();
 const { tokenCheck, adminCheck } = require("../../middlewares/auth");
-const { addTransaction, cancelTransaction } = require("./controller");
+const { getAllTransactions, addTransaction, cancelTransaction } = require("./controller");
 
-router.post("/transaction", tokenCheck, adminCheck, addTransaction);
+router.get("/transactions", tokenCheck, adminCheck, getAllTransactions);
+router.post("/add-transaction", tokenCheck, adminCheck, addTransaction);
 router.patch(
-  "/transaction/cancel/:id",
+  "/cancel-transaction/:id",
   tokenCheck,
   adminCheck,
   cancelTransaction
