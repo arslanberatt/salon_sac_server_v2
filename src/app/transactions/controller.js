@@ -3,6 +3,15 @@ const SalaryRecord = require("../salaryRecords/model");
 const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
 
+const getAllTransactions = async (req, res) => {
+  const transactions = await Transaction.find()
+    .populate("category")
+    .populate("createdBy", "name lastname") // sadece ad-soyad
+    .sort({ createdAt: -1 });
+
+  return new Response({ transactions }, "Tüm işlemler listelendi.").success(res);
+};
+
 const addTransaction = async (req, res) => {
   const { amount, description, date, user_id, category } = req.body;
 
