@@ -4,18 +4,18 @@ const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
 
 const addTransaction = async (req, res) => {
-  const { type, amount, description, date, user_id } = req.body;
+  const { amount, description, date, user_id, category } = req.body;
 
-  if (!type || !amount || !description) {
+  if (!category || !amount || !description) {
     throw APIError.badRequest("Gerekli alanlar eksik.");
   }
 
   const transaction = await Transaction.create({
-    type,
     amount,
     description,
     date,
     user_id,
+    category,
     createdBy: req.user._id,
   });
 
@@ -25,7 +25,7 @@ const addTransaction = async (req, res) => {
 const cancelTransaction = async (req, res) => {
   const { id } = req.params;
 
-  const transaction = await Transaction.findById(id);
+  const transaction = await Transaction.findById(id).populate("category");
   if (!transaction) throw APIError.notFound("İşlem bulunamadı.");
   if (transaction.canceled) throw APIError.badRequest("Zaten iptal edilmiş.");
 
@@ -36,9 +36,7 @@ const cancelTransaction = async (req, res) => {
     now.getMonth() === created.getMonth();
 
   if (!sameMonth) {
-    throw APIError.badRequest(
-      "Sadece aynı ay içindeki işlemler iptal edilebilir."
-    );
+    throw APIError.badRequest("Sadece aynı ay içindeki işlemler iptal edilebilir.");
   }
 
   transaction.canceled = true;
@@ -47,6 +45,7 @@ const cancelTransaction = async (req, res) => {
 
   await transaction.save();
 
+  // prim iptali varsa maaş kaydını sil
   if (
     transaction.description.toLowerCase().includes("prim") &&
     transaction.user_id
