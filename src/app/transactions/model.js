@@ -1,12 +1,5 @@
-const mongoose = require("mongoose");
-
 const TransactionSchema = new mongoose.Schema(
   {
-    type: {
-      type: String,
-      enum: ["gelir", "gider"],
-      required: true,
-    },
     amount: {
       type: Number,
       required: true,
@@ -22,6 +15,11 @@ const TransactionSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TransactionCategory", // burada type zaten var
       required: true,
     },
     canceled: {
@@ -43,6 +41,3 @@ const TransactionSchema = new mongoose.Schema(
     collection: "transactions",
   }
 );
-
-const transaction = mongoose.model("Transaction", TransactionSchema);
-module.exports = transaction;
