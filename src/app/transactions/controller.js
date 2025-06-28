@@ -72,4 +72,5 @@ const cancelTransaction = async (req, res) => {
 module.exports = {
   addTransaction,
   cancelTransaction,
+  getAllTransactions
 };
