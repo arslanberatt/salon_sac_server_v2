@@ -41,3 +41,6 @@ const TransactionSchema = new mongoose.Schema(
     collection: "transactions",
   }
 );
+
+const transaction = mongoose.model("Transaction", TransactionSchema);
+module.exports = transaction; 
