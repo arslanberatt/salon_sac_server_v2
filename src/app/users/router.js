@@ -5,7 +5,7 @@ const { getMe, updateMe, updateUserByAdmin } = require("./controller");
 
 router.get("/me", tokenCheck, getMe);
 
-router.put("/me", tokenCheck, upload.single("avatar"), updateMe);
+router.put("/update-user", tokenCheck, upload.single("avatar"), updateMe);
 
 router.put("/users/:id", tokenCheck,adminCheck, updateUserByAdmin);
 
