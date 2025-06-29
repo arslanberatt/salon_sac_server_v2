@@ -4,7 +4,7 @@ const { getAllTransactions, addTransaction, cancelTransaction } = require("./con
 
 router.get("/transactions", tokenCheck, adminCheck, getAllTransactions);
 router.post("/add-transaction", tokenCheck, adminCheck, addTransaction);
-router.patch(
+router.put(
   "/cancel-transaction/:id",
   tokenCheck,
   adminCheck,
