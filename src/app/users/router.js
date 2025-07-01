@@ -4,9 +4,9 @@ const { tokenCheck, adminCheck } = require("../../middlewares/auth");
 const { getMe, updateMe, updateUserByAdmin } = require("./controller");
 
 router.get("/me", tokenCheck, getMe);
-
+router.get("/active", tokenCheck, adminCheck, getActiveUsers);
+router.get("/passive", tokenCheck, adminCheck, getPassiveUsers);
 router.put("/me", tokenCheck, upload.single("avatar"), updateMe);
-
-router.put("/users/:id", tokenCheck,adminCheck, updateUserByAdmin);
+router.put("/users/:id", tokenCheck, adminCheck, updateUserByAdmin);
 
 module.exports = router;

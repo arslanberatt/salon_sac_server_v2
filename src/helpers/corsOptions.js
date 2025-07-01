@@ -1,4 +1,4 @@
-const whiteList = ["http://localhost:3000"];
+const whiteList = [process.env.SERVER];
 const corsOptions = (req, callback) => {
   let corsOpt;
   if (whiteList.indexOf(req.header("Origin")) !== -1) {
