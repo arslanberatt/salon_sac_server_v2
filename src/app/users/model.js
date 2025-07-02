@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "/default-avatar.png",
+      default: `${process.env.SERVER}//uploads/default-avatar.png`,
     },
   },
   {

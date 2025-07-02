@@ -12,17 +12,13 @@ const getMe = async (req, res) => {
 const updateMe = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const body = req.body;
-
-    if (body.password) {
-      body.password = await bcrypt.hash(body.password, 10);
-    }
+    const body = { ...req.body };
 
     if (req.file) {
       body.avatar = `/uploads/${req.file.filename}`;
 
       const old = await User.findById(userId).select("avatar");
-      if (old?.avatar) {
+      if (old?.avatar && old.avatar !== "/uploads/default-avatar.png") {
         const oldPath = path.join("public", old.avatar);
         fs.unlink(oldPath).catch(() => {});
       }
