@@ -1,4 +1,4 @@
-const whiteList = [process.env.SERVER];
+const whiteList = [process.env.SERVER, "https://myapp.railway.app"];
 const corsOptions = (req, callback) => {
   let corsOpt;
   if (whiteList.indexOf(req.header("Origin")) !== -1) {
