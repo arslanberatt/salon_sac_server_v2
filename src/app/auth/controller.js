@@ -24,7 +24,10 @@ const login = async (req, res) => {
   console.log("🔐 DB'deki hash:", userData.password);
   console.log("🔑 Gelen şifre:", password);
 
-  const isPasswordValid = await bcrypt.compare(password.trim(), userData.password);
+  const isPasswordValid = await bcrypt.compare(
+    password.trim(),
+    userData.password
+  );
   console.log("⚖️ Eşleşme sonucu:", isPasswordValid);
 
   if (!isPasswordValid) {
@@ -39,7 +42,6 @@ const login = async (req, res) => {
   console.log("✅ Giriş başarılı:", email);
   createToken(userData, res);
 };
-
 
 const register = async (req, res) => {
   const { email, phone } = req.body;
@@ -209,7 +211,8 @@ const resetPassword = async (req, res) => {
   if (!decodedToken) {
     throw new APIError("Geçersiz token!", 401);
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password.trim(), 10);
+  console.log("✅ Yeni hash (noktalı şifre için):", hashedPassword);
   await user.updateOne(
     { _id: decodedToken._id },
     {
