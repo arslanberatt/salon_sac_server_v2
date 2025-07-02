@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      // default: "https://example.com/default-avatar.png", // Default avatar URL
+      default: "/default-avatar.png",
     },
   },
   {
