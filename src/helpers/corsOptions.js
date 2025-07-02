@@ -1,14 +1,14 @@
-const whiteList = [process.env.SERVER, "https://salonsacserverv2-production.up.railway.app/"];
+const whiteList = [
+  process.env.SERVER,
+  "https://salonsacserverv2-production.up.railway.app" // ← sondaki slash kaldırıldı
+];
+
 const corsOptions = (req, callback) => {
-  let corsOpt;
-  if (whiteList.indexOf(req.header("Origin")) !== -1) {
-    corsOpt = { origin: true };
-  } else {
-    corsOpt = { origin: false };
+  const origin = req.header("Origin");
+  const isAllowed = whiteList.includes(origin);
 
-  }
-
+  const corsOpt = { origin: isAllowed };
   callback(null, corsOpt);
 };
 
-module.exports = corsOptions
+module.exports = corsOptions;
