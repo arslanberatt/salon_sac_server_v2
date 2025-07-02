@@ -1,6 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const User = require("./model");
 const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");

@@ -1,5 +1,5 @@
 const user = require("../users/model");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const APIError = require("../../utils/errors");
 const Response = require("../../utils/response");
 const {
