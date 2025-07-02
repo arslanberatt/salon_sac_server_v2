@@ -13,19 +13,33 @@ const moment = require("moment");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log("📥 Giriş denemesi:", { email, password });
+
   const userData = await user.findOne({ email });
   if (!userData) {
+    console.log("❌ Kullanıcı bulunamadı:", email);
     throw new APIError("Böyle bir kullanıcı bulunamadı!", 400);
   }
-  const isPasswordValid = await bcrypt.compare(password, userData.password);
+
+  console.log("🔐 DB'deki hash:", userData.password);
+  console.log("🔑 Gelen şifre:", password);
+
+  const isPasswordValid = await bcrypt.compare(password.trim(), userData.password);
+  console.log("⚖️ Eşleşme sonucu:", isPasswordValid);
+
   if (!isPasswordValid) {
     throw new APIError("Parola yanlış!", 400);
   }
+
   if (!userData.is_active) {
+    console.log("🚫 Kullanıcı aktif değil.");
     throw new APIError("Kullanıcı aktif değil!", 403);
   }
+
+  console.log("✅ Giriş başarılı:", email);
   createToken(userData, res);
 };
+
 
 const register = async (req, res) => {
   const { email, phone } = req.body;
