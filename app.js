@@ -7,13 +7,11 @@ const port = process.env.PORT || 5000;
 const errorHandlerMiddleware = require("./src/middlewares/errorHandler");
 const cors = require("cors");
 const corsOptions = require("./src/helpers/corsOptions");
-const mongoSanitize = require("@exortek/express-mongo-sanitize");
 const path = require("path");
 const apiLimiter = require("./src/middlewares/rateLimit");
 const moment = require("moment-timezone");
 moment.tz.setDefault("Europe/Istanbul");
 
-app.use(express.json());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.set('trust proxy', 1);
