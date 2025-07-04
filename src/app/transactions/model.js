@@ -19,10 +19,15 @@ const TransactionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false, 
     },
     canceled: {
       type: Boolean,
