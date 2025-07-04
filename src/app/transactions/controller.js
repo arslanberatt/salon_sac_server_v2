@@ -12,41 +12,39 @@ const getTransactions = async (req, res) => {
   }
 
   const transactions = await Transaction.find(filter)
+    .populate("category")
     .sort({ createdAt: -1 });
 
+  console.log("Transaction listesi gönderildi:", transactions.length);
   return new Response(transactions, "İşlemler listelendi.").success(res);
 };
 
 const addTransaction = async (req, res) => {
   const user = req.user;
+  const { type, amount, description, date, user_id, category } = req.body;
 
-  if (
-    !user.is_admin &&
-    !user.is_moderator &&
-    req.body.user_id &&
-    req.body.user_id !== user._id.toString()
-  ) {
-    throw APIError.forbidden(
-      "Başka bir kullanıcı adına işlem oluşturamazsınız."
-    );
-  }
-
-  const { type, amount, description, category } = req.body;
+  console.log("Gelen body:", req.body);
 
   if (!type || !amount || !description || !category?._id) {
+    console.warn("Eksik alan:", { type, amount, description, category });
     throw APIError.badRequest("Gerekli alanlar eksik.");
   }
 
   const newTransaction = new Transaction({
-    ...req.body,
+    type,
+    amount,
+    description,
+    date,
+    user_id,
     category: category._id,
     createdBy: user._id,
   });
 
   await newTransaction.save();
+
+  console.log("Yeni işlem kaydedildi:", newTransaction._id);
   return new Response(newTransaction, "İşlem kaydedildi.").created(res);
 };
-
 
 const cancelTransaction = async (req, res) => {
   const { id } = req.params;
@@ -62,16 +60,15 @@ const cancelTransaction = async (req, res) => {
     now.getMonth() === created.getMonth();
 
   if (!sameMonth) {
-    throw APIError.badRequest(
-      "Sadece aynı ay içindeki işlemler iptal edilebilir."
-    );
+    throw APIError.badRequest("Sadece aynı ay içindeki işlemler iptal edilebilir.");
   }
 
   transaction.canceled = true;
   transaction.canceledAt = now;
   transaction.canceledBy = req.user._id;
-
   await transaction.save();
+
+  console.log("İşlem iptal edildi:", transaction._id);
 
   if (
     transaction.description.toLowerCase().includes("prim") &&
@@ -82,6 +79,7 @@ const cancelTransaction = async (req, res) => {
       amount: transaction.amount,
       type: "prim",
     });
+    console.log("Prim kaydı da silindi.");
   }
 
   return new Response(transaction, "İşlem iptal edildi.").success(res);
@@ -90,5 +88,5 @@ const cancelTransaction = async (req, res) => {
 module.exports = {
   addTransaction,
   cancelTransaction,
-  getTransactions
+  getTransactions,
 };
