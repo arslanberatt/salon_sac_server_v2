@@ -51,7 +51,11 @@ const cancelTransaction = async (req, res) => {
 
   const transaction = await Transaction.findById(id);
   if (!transaction) throw APIError.notFound("İşlem bulunamadı.");
-  if (transaction.canceled) throw APIError.badRequest("Zaten iptal edilmiş.");
+  if (transaction.canceled) {
+  console.log("Bu işlem zaten iptal edilmiş:", transaction._id);
+  return new Response(null, "Zaten iptal edilmiş.").success(res);
+}
+
 
   const now = new Date();
   const created = new Date(transaction.date);
