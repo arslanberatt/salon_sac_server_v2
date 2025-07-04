@@ -47,51 +47,31 @@ const addTransaction = async (req, res) => {
 };
 
 const cancelTransaction = async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const transaction = await Transaction.findById(id);
 
-  const transaction = await Transaction.findById(id);
-  if (!transaction) throw APIError.notFound("İşlem bulunamadı.");
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: "İşlem bulunamadı." });
+    }
 
-  if (transaction.canceled) {
-    console.log("Bu işlem zaten iptal edilmiş:", transaction._id);
-    return new Response(null, "Zaten iptal edilmiş.").success(res);
+    if (transaction.canceled) {
+      return res.status(200).json({ success: true, message: "İşlem zaten iptal edilmiş.", data: transaction });
+    }
+
+    transaction.canceled = true;
+    transaction.canceledAt = new Date();
+    transaction.canceledBy = req.user._id;
+
+    await transaction.save();
+
+    return res.status(200).json({ success: true, message: "İşlem iptal edildi.", data: transaction });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
-
-  const now = new Date();
-  const createdAt = new Date(transaction.createdAt);
-
-  const sameMonth =
-    now.getFullYear() === createdAt.getFullYear() &&
-    now.getMonth() === createdAt.getMonth();
-
-  if (!sameMonth) {
-    throw APIError.badRequest(
-      "Sadece aynı ay içindeki işlemler iptal edilebilir."
-    );
-  }
-
-  transaction.canceled = true;
-  transaction.canceledAt = now;
-  transaction.canceledBy = req.user._id;
-
-  await transaction.save();
-
-  console.log("İşlem iptal edildi:", transaction._id);
-
-  if (
-    transaction.description?.toLowerCase().includes("prim") &&
-    transaction.user_id
-  ) {
-    await SalaryRecord.deleteOne({
-      employeeId: transaction.user_id,
-      amount: transaction.amount,
-      type: "prim",
-    });
-    console.log("Prim kaydı da silindi.");
-  }
-
-  return new Response(transaction, "İşlem iptal edildi.").success(res);
 };
+
 
 module.exports = {
   addTransaction,
