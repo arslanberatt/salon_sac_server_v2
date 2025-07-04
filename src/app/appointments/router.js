@@ -5,6 +5,7 @@ const {
   getAppointments,
   markAsDone,
   cancelAppointment,
+  updateAppointment
 } = require("./controller");
 
 router.post("/create-appointment", tokenCheck, createAppointment);
