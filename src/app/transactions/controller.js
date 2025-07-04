@@ -18,23 +18,30 @@ const getTransactions = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
-  const { type, amount, description, date, user_id } = req.body;
+  const { type, amount, description, date, user_id, category } = req.body;
 
-  if (!type || !amount || !description) {
+  if (!type || !amount || !description || !category) {
     throw APIError.badRequest("Gerekli alanlar eksik.");
   }
 
-  const transaction = await Transaction.create({
+  const payload = {
     type,
     amount,
     description,
     date,
     user_id,
-    createdBy: req.user._id,
-  });
+    category,
+  };
+
+  if (req.user?._id) {
+    payload.createdBy = req.user._id;
+  }
+
+  const transaction = await Transaction.create(payload);
 
   return new Response(transaction, "İşlem kaydedildi.").created(res);
 };
+
 
 const cancelTransaction = async (req, res) => {
   const { id } = req.params;
