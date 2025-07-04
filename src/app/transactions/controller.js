@@ -18,23 +18,33 @@ const getTransactions = async (req, res) => {
 };
 
 const addTransaction = async (req, res) => {
-  const { type, amount, description, date, user_id, category } = req.body;
+  const user = req.user;
+
+  if (
+    !user.is_admin &&
+    !user.is_moderator &&
+    req.body.user_id &&
+    req.body.user_id !== user._id.toString()
+  ) {
+    throw APIError.forbidden(
+      "Başka bir kullanıcı adına işlem oluşturamazsınız."
+    );
+  }
+
+  const { type, amount, description, category } = req.body;
 
   if (!type || !amount || !description || !category?._id) {
     throw APIError.badRequest("Gerekli alanlar eksik.");
   }
 
-  const transaction = await Transaction.create({
-    type,
-    amount,
-    description,
-    date,
-    user_id,
-    category: category._id, 
-    createdBy: req.user?._id,
+  const newTransaction = new Transaction({
+    ...req.body,
+    category: category._id,
+    createdBy: user._id,
   });
 
-  return new Response(transaction, "İşlem kaydedildi.").created(res);
+  await newTransaction.save();
+  return new Response(newTransaction, "İşlem kaydedildi.").created(res);
 };
 
 
