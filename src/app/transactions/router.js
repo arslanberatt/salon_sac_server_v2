@@ -9,7 +9,7 @@ const {
 router.get("/transactions", tokenCheck, adminCheck, getTransactions);
 router.post("/add-transaction", tokenCheck, adminCheck, addTransaction);
 router.put(
-  "/transaction/cancel/:id",
+  "/cancel-transaction/:id",
   tokenCheck,
   adminCheck,
   cancelTransaction
