@@ -3,6 +3,20 @@ const SalaryRecord = require("../salaryRecords/model");
 const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
 
+const getTransactions = async (req, res) => {
+  const filter = {};
+  const user = req.user;
+
+  if (!user.is_admin && !user.is_moderator) {
+    filter.user_id = user._id;
+  }
+
+  const transactions = await Transaction.find(filter)
+    .sort({ createdAt: -1 });
+
+  return new Response(transactions, "İşlemler listelendi.").success(res);
+};
+
 const addTransaction = async (req, res) => {
   const { type, amount, description, date, user_id } = req.body;
 
@@ -64,4 +78,5 @@ const cancelTransaction = async (req, res) => {
 module.exports = {
   addTransaction,
   cancelTransaction,
+  getTransactions
 };
