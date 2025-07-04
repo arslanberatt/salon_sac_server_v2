@@ -102,9 +102,32 @@ const cancelAppointment = async (req, res) => {
   return new Response(appointment, "Randevu iptal edildi.").success(res);
 };
 
+const updateAppointment = async (req, res) => {
+  const { id } = req.params;
+  const user = req.user;
+
+  const appointment = await Appointment.findById(id);
+  if (!appointment) throw APIError.notFound("Randevu bulunamadı.");
+
+  if (
+    !user.is_admin &&
+    !user.is_moderator &&
+    appointment.employee_id.toString() !== user._id.toString()
+  ) {
+    throw APIError.forbidden("Bu randevuyu güncelleme yetkiniz yok.");
+  }
+
+  Object.assign(appointment, req.body);
+  await appointment.save();
+
+  return new Response(appointment, "Randevu güncellendi.").success(res);
+};
+
+
 module.exports = {
   createAppointment,
   getAppointments,
   markAsDone,
   cancelAppointment,
+  updateAppointment
 };

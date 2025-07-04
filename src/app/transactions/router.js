@@ -3,7 +3,7 @@ const { tokenCheck, adminCheck } = require("../../middlewares/auth");
 const { addTransaction, cancelTransaction } = require("./controller");
 
 router.post("/transaction", tokenCheck, adminCheck, addTransaction);
-router.patch(
+router.put(
   "/transaction/cancel/:id",
   tokenCheck,
   adminCheck,
