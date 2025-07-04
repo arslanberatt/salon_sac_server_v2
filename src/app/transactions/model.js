@@ -21,13 +21,13 @@ const TransactionSchema = new mongoose.Schema(
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+      ref: "TransactionCategory",
       required: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false, 
+      required: false,
     },
     canceled: {
       type: Boolean,
