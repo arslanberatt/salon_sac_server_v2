@@ -51,31 +51,35 @@ const cancelTransaction = async (req, res) => {
 
   const transaction = await Transaction.findById(id);
   if (!transaction) throw APIError.notFound("İşlem bulunamadı.");
-  if (transaction.canceled) {
-  console.log("Bu işlem zaten iptal edilmiş:", transaction._id);
-  return new Response(null, "Zaten iptal edilmiş.").success(res);
-}
 
+  if (transaction.canceled) {
+    console.log("Bu işlem zaten iptal edilmiş:", transaction._id);
+    return new Response(null, "Zaten iptal edilmiş.").success(res);
+  }
 
   const now = new Date();
-  const created = new Date(transaction.date);
+  const createdAt = new Date(transaction.createdAt);
+
   const sameMonth =
-    now.getFullYear() === created.getFullYear() &&
-    now.getMonth() === created.getMonth();
+    now.getFullYear() === createdAt.getFullYear() &&
+    now.getMonth() === createdAt.getMonth();
 
   if (!sameMonth) {
-    throw APIError.badRequest("Sadece aynı ay içindeki işlemler iptal edilebilir.");
+    throw APIError.badRequest(
+      "Sadece aynı ay içindeki işlemler iptal edilebilir."
+    );
   }
 
   transaction.canceled = true;
   transaction.canceledAt = now;
   transaction.canceledBy = req.user._id;
+
   await transaction.save();
 
   console.log("İşlem iptal edildi:", transaction._id);
 
   if (
-    transaction.description.toLowerCase().includes("prim") &&
+    transaction.description?.toLowerCase().includes("prim") &&
     transaction.user_id
   ) {
     await SalaryRecord.deleteOne({
