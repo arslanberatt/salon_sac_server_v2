@@ -56,7 +56,7 @@ const markAsDone = async (req, res) => {
   const rate = employee.commissionRate || 0;
   const commission = Math.floor((appointment.price * rate) / 100);
 
-  // 1. Prim olarak SalaryRecord kaydı
+  // prim ekle
   await SalaryRecord.create({
     employeeId: employee._id,
     type: "prim",
@@ -65,7 +65,7 @@ const markAsDone = async (req, res) => {
     appointment_id: appointment._id,
   });
 
-  // 2. Gelir olarak Transaction kaydı
+  // transaction ekle
   const Transaction = require("../transactions/model");
   const Category = require("../transactionCategories/model");
 
@@ -79,10 +79,14 @@ const markAsDone = async (req, res) => {
     date: new Date(),
     category: incomeCategory._id,
     createdBy: req.user._id,
+    canceled: false,
+    canceledAt: null,
+    canceledBy: null,
   });
 
   return new Response(appointment, "Randevu tamamlandı.").success(res);
 };
+
 
 
 const cancelAppointment = async (req, res) => {
