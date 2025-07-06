@@ -56,6 +56,7 @@ const markAsDone = async (req, res) => {
   const rate = employee.commissionRate || 0;
   const commission = Math.floor((appointment.price * rate) / 100);
 
+  // 1. Prim olarak SalaryRecord kaydı
   await SalaryRecord.create({
     employeeId: employee._id,
     type: "prim",
@@ -64,27 +65,25 @@ const markAsDone = async (req, res) => {
     appointment_id: appointment._id,
   });
 
-  const category = await TransactionCategory.findOne({
-    name: "Randevu geliri",
-  });
-  if (!category)
-    throw APIError.notFound("Randevu geliri kategorisi bulunamadı.");
+  // 2. Gelir olarak Transaction kaydı
+  const Transaction = require("../transactions/model");
+  const Category = require("../transactionCategories/model");
+
+  const incomeCategory = await Category.findOne({ name: "Randevu Geliri" });
+  if (!incomeCategory) throw APIError.notFound("Randevu Geliri kategorisi bulunamadı.");
 
   await Transaction.create({
-    category_id: category._id,
-    amount: appointment.price,
-    description: `${appointment.customer_name} randevusundan elde edilen gelir`,
-    user_id: employee._id,
-    appointment_id: appointment._id,
-    createdBy: req.user._id,
     type: "gelir",
+    amount: appointment.price,
+    description: `${appointment.customer_name} randevusu`,
+    date: new Date(),
+    category: incomeCategory._id,
+    createdBy: req.user._id,
   });
 
-  return new Response(
-    appointment,
-    "Randevu tamamlandı, prim ve gelir kaydedildi."
-  ).success(res);
+  return new Response(appointment, "Randevu tamamlandı.").success(res);
 };
+
 
 const cancelAppointment = async (req, res) => {
   const { id } = req.params;
