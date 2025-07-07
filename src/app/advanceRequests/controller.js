@@ -52,16 +52,20 @@ const updateAdvanceRequestStatus = async (req, res) => {
       description: "Avans onayı sonrası otomatik kayıt",
     });
 
-    const category = await TransactionCategory.findOne({ name: "avans" });
-    if (!category) throw APIError.notFound("Avans kategorisi bulunamadı.");
+    const expenseCategory = await Category.findOne({ name: "Avans" });
+    if (!expenseCategory)
+      throw APIError.notFound("Avans kategorisi bulunamadı.");
 
     await Transaction.create({
-      category_id: category._id,
-      amount: request.amount,
-      description: "Avans ödemesi",
-      user_id: request.employeeId,
-      createdBy: req.user._id,
       type: "gider",
+      amount: appointment.price,
+      description: `${request.employeeId} avansı`,
+      date: new Date(),
+      category: expenseCategory._id,
+      createdBy: req.user._id,
+      canceled: false,
+      canceledAt: null,
+      canceledBy: null,
     });
   }
 
