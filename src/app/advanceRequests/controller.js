@@ -52,7 +52,9 @@ const updateAdvanceRequestStatus = async (req, res) => {
       description: "Avans onayı sonrası otomatik kayıt",
     });
 
-    const expenseCategory = await Category.findOne({ name: "Avans" });
+    const expenseCategory = await TransactionCategory.findOne({
+      name: "Avans",
+    });
     if (!expenseCategory)
       throw APIError.notFound("Avans kategorisi bulunamadı.");
 
