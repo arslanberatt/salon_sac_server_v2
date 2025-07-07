@@ -50,6 +50,13 @@ const adminCheck = (req, res, next) => {
   next();
 };
 
+const modCheck = (req, res, next) => {
+  if (!req.user.is_mod) {
+    throw new APIError("Yetersiz yetki!", 403);
+  }
+  next();
+};
+
 const createTemporaryToken = async (userId, email) => {
   const payload = {
     sub: userId,
@@ -98,4 +105,5 @@ module.exports = {
   adminCheck,
   createTemporaryToken,
   decodedTemporaryToken,
+  modCheck
 };
