@@ -6,7 +6,7 @@ const {
 } = require("./controller");
 const { tokenCheck, adminCheck } = require("../../middlewares/auth");
 
-router.get("/services", tokenCheck, getAllServices);
+router.get("/services", getAllServices);
 router.post("/create-service", tokenCheck, adminCheck, createService);
 router.put("/update-service/:id", tokenCheck, adminCheck, updateService);
 
