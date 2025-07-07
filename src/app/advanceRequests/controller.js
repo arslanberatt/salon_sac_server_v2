@@ -60,7 +60,7 @@ const updateAdvanceRequestStatus = async (req, res) => {
 
     await Transaction.create({
       type: "gider",
-      amount: appointment.amount,
+      amount: request.amount,
       description: `${request.employeeId} avansı`,
       date: new Date(),
       category: expenseCategory._id,
