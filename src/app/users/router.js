@@ -10,7 +10,7 @@ const {
 } = require("./controller");
 
 router.get("/me", tokenCheck, getMe);
-router.get("/active", tokenCheck, modCheck, adminCheck, getActiveUsers);
+router.get("/active", tokenCheck, adminCheck, getActiveUsers);
 router.get("/passive", tokenCheck, adminCheck, getPassiveUsers);
 router.put("/update-user", tokenCheck, upload.single("avatar"), updateMe);
 router.put("/users/:id", tokenCheck, adminCheck, updateUserByAdmin);
