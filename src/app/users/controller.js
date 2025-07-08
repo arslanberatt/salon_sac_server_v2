@@ -80,7 +80,9 @@ const updateUserByAdmin = async (req, res) => {
 
 const getActiveUsers = async (req, res, next) => {
   try {
-    const users = await User.find({ is_admin: false, is_active: true }).select("-password -reset");
+    const users = await User.find({ is_active: true }).select(
+      "-password -reset"
+    );
     return new Response(users, "Aktif kullanıcılar listelendi").success(res);
   } catch (err) {
     next(err);
@@ -89,12 +91,19 @@ const getActiveUsers = async (req, res, next) => {
 
 const getPassiveUsers = async (req, res, next) => {
   try {
-    const users = await User.find({ is_admin: false, is_active: false }).select("-password -reset");
+    const users = await User.find({ is_admin: false, is_active: false }).select(
+      "-password -reset"
+    );
     return new Response(users, "Pasif kullanıcılar listelendi").success(res);
   } catch (err) {
     next(err);
   }
 };
 
-
-module.exports = { getMe, updateMe, updateUserByAdmin, getActiveUsers, getPassiveUsers };
+module.exports = {
+  getMe,
+  updateMe,
+  updateUserByAdmin,
+  getActiveUsers,
+  getPassiveUsers,
+};
