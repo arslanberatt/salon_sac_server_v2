@@ -2,6 +2,8 @@ const Transaction = require("./model");
 const SalaryRecord = require("../salaryRecords/model");
 const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
+const User = require("../users/model");
+const AdvanceRequest = require("../advanceRequests/model");
 
 const getTransactions = async (req, res) => {
   const filter = {};
@@ -52,26 +54,60 @@ const cancelTransaction = async (req, res) => {
     const transaction = await Transaction.findById(id);
 
     if (!transaction) {
-      return res.status(404).json({ success: false, message: "İşlem bulunamadı." });
+      return res
+        .status(404)
+        .json({ success: false, message: "İşlem bulunamadı." });
     }
 
     if (transaction.canceled) {
-      return res.status(200).json({ success: true, message: "İşlem zaten iptal edilmiş.", data: transaction });
+      return res.status(200).json({
+        success: true,
+        message: "İşlem zaten iptal edilmiş.",
+        data: transaction,
+      });
     }
 
+    // İptal et
     transaction.canceled = true;
     transaction.canceledAt = new Date();
     transaction.canceledBy = req.user._id;
-
     await transaction.save();
 
-    return res.status(200).json({ success: true, message: "İşlem iptal edildi.", data: transaction });
+    // ilgili SalaryRecord'ı sil
+    await SalaryRecord.findOneAndDelete({
+      amount: transaction.amount,
+      description: transaction.description,
+    });
 
+    // description "avansı" içeriyorsa AdvanceRequest durumunu sıfırla
+    if (transaction.description.includes("avansı")) {
+      const name = transaction.description.split(" ")[0];
+      const user = await User.findOne({ name });
+      console.log("Advance status reset:", advance._id);
+
+      if (user) {
+        const advance = await AdvanceRequest.findOne({
+          employeeId: user._id,
+          amount: transaction.amount,
+          status: "onaylandi",
+        });
+
+        if (advance) {
+          advance.status = "beklemede";
+          await advance.save();
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "İşlem iptal edildi.",
+      data: transaction,
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 module.exports = {
   addTransaction,
