@@ -6,7 +6,6 @@ const User = require("../users/model");
 const AdvanceRequest = require("../advanceRequests/model");
 const Appointment = require("../appointments/model");
 
-
 const getTransactions = async (req, res) => {
   const filter = {};
   const user = req.user;
@@ -91,11 +90,13 @@ const cancelTransaction = async (req, res) => {
         appointment.is_done = false;
         await appointment.save();
 
-        // ilgili prim kaydını sil
-        await SalaryRecord.findOneAndDelete({
-          appointment_id: appointment._id,
-          type: "prim",
-        });
+        await SalaryRecord.findOneAndUpdate(
+          {
+            appointment_id: appointment._id,
+            type: "prim",
+          },
+          { approved: false }
+        );
 
         console.log("Randevu ve prim geri alındı:", appointment._id);
       }
