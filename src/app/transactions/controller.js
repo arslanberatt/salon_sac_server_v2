@@ -74,16 +74,27 @@ const cancelTransaction = async (req, res) => {
     transaction.canceledBy = req.user._id;
     await transaction.save();
 
-    // İlgili salary record'u sil
-    await SalaryRecord.findOneAndDelete({
+    // PRİM mi AVANS mı kontrol et
+    const isAdvance = transaction.description.includes("avansı");
+    const employeeIdRaw = transaction.description.split(" ")[0];
+
+    // SalaryRecord güncelleme (silme değil)
+    const salaryRecord = await SalaryRecord.findOne({
       amount: transaction.amount,
       description: transaction.description,
     });
 
-    // Avans iptali kontrolü
-    if (transaction.description.includes("avansı")) {
-      const employeeIdRaw = transaction.description.split(" ")[0];
+    if (salaryRecord) {
+      if (isAdvance) {
+        salaryRecord.approved = false;
+        await salaryRecord.save();
+      } else {
+        await salaryRecord.deleteOne();
+      }
+    }
 
+    // AdvanceRequest durumunu geri çek
+    if (isAdvance) {
       const advance = await AdvanceRequest.findOne({
         employeeId: employeeIdRaw,
         amount: transaction.amount,
