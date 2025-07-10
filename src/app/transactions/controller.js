@@ -4,6 +4,8 @@ const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
 const User = require("../users/model");
 const AdvanceRequest = require("../advanceRequests/model");
+const Appointment = require("../appointments/model");
+
 
 const getTransactions = async (req, res) => {
   const filter = {};
