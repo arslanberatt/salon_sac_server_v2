@@ -54,9 +54,10 @@ const cancelTransaction = async (req, res) => {
     const transaction = await Transaction.findById(id);
 
     if (!transaction) {
-      return res
-        .status(404)
-        .json({ success: false, message: "İşlem bulunamadı." });
+      return res.status(404).json({
+        success: false,
+        message: "İşlem bulunamadı.",
+      });
     }
 
     if (transaction.canceled) {
@@ -67,35 +68,32 @@ const cancelTransaction = async (req, res) => {
       });
     }
 
-    // İptal et
+    // İşlemi iptal et
     transaction.canceled = true;
     transaction.canceledAt = new Date();
     transaction.canceledBy = req.user._id;
     await transaction.save();
 
-    // ilgili SalaryRecord'ı sil
+    // İlgili salary record'u sil
     await SalaryRecord.findOneAndDelete({
       amount: transaction.amount,
       description: transaction.description,
     });
 
-    // description "avansı" içeriyorsa AdvanceRequest durumunu sıfırla
+    // Avans iptali kontrolü
     if (transaction.description.includes("avansı")) {
-      const name = transaction.description.split(" ")[0];
-      const user = await User.findOne({ name });
-      console.log("Advance status reset:", advance._id);
+      const employeeIdRaw = transaction.description.split(" ")[0];
 
-      if (user) {
-        const advance = await AdvanceRequest.findOne({
-          employeeId: user._id,
-          amount: transaction.amount,
-          status: "onaylandi",
-        });
+      const advance = await AdvanceRequest.findOne({
+        employeeId: employeeIdRaw,
+        amount: transaction.amount,
+        status: "onaylandi",
+      });
 
-        if (advance) {
-          advance.status = "beklemede";
-          await advance.save();
-        }
+      if (advance) {
+        advance.status = "beklemede";
+        await advance.save();
+        console.log("Advance status reset:", advance._id);
       }
     }
 
@@ -105,9 +103,14 @@ const cancelTransaction = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("İptal hatası:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
 
 module.exports = {
   addTransaction,
