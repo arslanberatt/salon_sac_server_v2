@@ -102,7 +102,7 @@ const cancelTransaction = async (req, res) => {
       });
 
       if (advance) {
-        advance.status = "beklemede";
+        advance.status = "reddedildi";
         await advance.save();
         console.log("Advance status reset:", advance._id);
       }
