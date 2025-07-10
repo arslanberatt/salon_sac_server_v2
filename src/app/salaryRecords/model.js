@@ -24,12 +24,16 @@ const SalaryRecordSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    appointment_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Appointment",
+    },
     approved: {
       type: Boolean,
       default: true,
     },
   },
-  { timestamps: true, collection: 'salaryRecord' }
+  { timestamps: true, collection: "salaryRecord" }
 );
 
 module.exports = mongoose.model("SalaryRecord", SalaryRecordSchema);
