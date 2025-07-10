@@ -74,11 +74,34 @@ const cancelTransaction = async (req, res) => {
     transaction.canceledBy = req.user._id;
     await transaction.save();
 
-    // PRİM mi AVANS mı kontrol et
+    // eğer randevu geliri ise
+    if (transaction.description.includes("randevusu")) {
+      // ilgili randevuyu bul
+      const customerName = transaction.description.replace(" randevusu", "");
+      const appointment = await Appointment.findOne({
+        customer_name: customerName,
+        price: transaction.amount,
+        is_done: true,
+      });
+
+      if (appointment) {
+        // randevuyu geri al
+        appointment.is_done = false;
+        await appointment.save();
+
+        // ilgili prim kaydını sil
+        await SalaryRecord.findOneAndDelete({
+          appointment_id: appointment._id,
+          type: "prim",
+        });
+
+        console.log("Randevu ve prim geri alındı:", appointment._id);
+      }
+    }
+
     const isAdvance = transaction.description.includes("avansı");
     const employeeIdRaw = transaction.description.split(" ")[0];
 
-    // SalaryRecord güncelleme (silme değil)
     const salaryRecord = await SalaryRecord.findOne({
       amount: transaction.amount,
       description: transaction.description,
@@ -93,7 +116,6 @@ const cancelTransaction = async (req, res) => {
       }
     }
 
-    // AdvanceRequest durumunu geri çek
     if (isAdvance) {
       const advance = await AdvanceRequest.findOne({
         employeeId: employeeIdRaw,
@@ -121,7 +143,6 @@ const cancelTransaction = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   addTransaction,
