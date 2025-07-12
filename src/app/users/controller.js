@@ -14,16 +14,18 @@ const updateMe = async (req, res, next) => {
     const userId = req.user._id;
     const body = { ...req.body };
 
+    // ✅ Avatar güncelleme
     if (req.file) {
       body.avatar = `/uploads/${req.file.filename}`;
 
       const old = await User.findById(userId).select("avatar");
       if (old?.avatar && old.avatar !== "/uploads/default-avatar.png") {
         const oldPath = path.join("public", old.avatar);
-        fs.unlink(oldPath).catch(() => {});
+        fs.unlink(oldPath).catch(() => { });
       }
     }
 
+    // ✅ E-posta benzersizliği kontrolü
     if (body.email) {
       const exists = await User.findOne({
         email: body.email,
@@ -31,6 +33,8 @@ const updateMe = async (req, res, next) => {
       });
       if (exists) throw new APIError("Bu e-posta zaten kayıtlı!", 400);
     }
+
+    // ✅ Telefon benzersizliği kontrolü
     if (body.phone) {
       const exists = await User.findOne({
         phone: body.phone,
@@ -39,6 +43,12 @@ const updateMe = async (req, res, next) => {
       if (exists) throw new APIError("Bu telefon zaten kayıtlı!", 400);
     }
 
+    // ✅ Şifre varsa hash'le
+    if (body.password) {
+      body.password = await bcrypt.hash(body.password.trim(), 10);
+    }
+
+    // ✅ Kullanıcıyı güncelle
     const updatedUser = await User.findByIdAndUpdate(userId, body, {
       new: true,
       select: "-password -reset",
@@ -49,6 +59,7 @@ const updateMe = async (req, res, next) => {
     next(err);
   }
 };
+
 
 const updateUserByAdmin = async (req, res) => {
   if (!req.user.is_admin) throw APIError.forbidden("Yetkisiz erişim.");
