@@ -5,6 +5,7 @@ const {
   forgetPassword,
   resetCodeCheck,
   resetPassword,
+  deleteMe
 } = require("./controller");
 const { tokenCheck } = require("../../middlewares/auth");
 const authValidation = require("../../middlewares/validations/authValidation");
