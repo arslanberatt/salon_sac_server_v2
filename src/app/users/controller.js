@@ -14,7 +14,6 @@ const updateMe = async (req, res, next) => {
     const userId = req.user._id;
     const body = { ...req.body };
 
-    // ✅ Avatar güncelleme
     if (req.file) {
       body.avatar = `/uploads/${req.file.filename}`;
 
@@ -25,7 +24,6 @@ const updateMe = async (req, res, next) => {
       }
     }
 
-    // ✅ E-posta benzersizliği kontrolü
     if (body.email) {
       const exists = await User.findOne({
         email: body.email,
@@ -34,7 +32,6 @@ const updateMe = async (req, res, next) => {
       if (exists) throw new APIError("Bu e-posta zaten kayıtlı!", 400);
     }
 
-    // ✅ Telefon benzersizliği kontrolü
     if (body.phone) {
       const exists = await User.findOne({
         phone: body.phone,
@@ -43,12 +40,10 @@ const updateMe = async (req, res, next) => {
       if (exists) throw new APIError("Bu telefon zaten kayıtlı!", 400);
     }
 
-    // ✅ Şifre varsa hash'le
     if (body.password) {
       body.password = await bcrypt.hash(body.password.trim(), 10);
     }
 
-    // ✅ Kullanıcıyı güncelle
     const updatedUser = await User.findByIdAndUpdate(userId, body, {
       new: true,
       select: "-password -reset",

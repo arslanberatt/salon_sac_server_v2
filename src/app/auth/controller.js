@@ -229,10 +229,19 @@ const resetPassword = async (req, res) => {
   ).success(res);
 };
 
+const deleteMe = async (req, res) => {
+  const userId = req.user._id;
+
+  await user.findByIdAndDelete(userId);
+
+  return new Response(null, "Hesabınız başarıyla silindi.").success(res);
+};
+
 module.exports = {
   login,
   register,
   forgetPassword,
   resetCodeCheck,
   resetPassword,
+  deleteMe
 };

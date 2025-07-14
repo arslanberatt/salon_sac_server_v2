@@ -32,13 +32,25 @@ const getAppointments = async (req, res) => {
     filter.employee_id = user._id;
   }
 
-  const appointments = await Appointment.find(filter)
+  let appointments = await Appointment.find(filter)
+    .sort({ createdAt: -1 })
+    .populate("employee_id", "name lastname")
+    .populate("services", "name price duration");
+
+  const invalidAppointments = appointments.filter(a => !a.employee_id);
+  for (const appt of invalidAppointments) {
+    appt.is_cancelled = true;
+    await appt.save();
+  }
+
+  appointments = await Appointment.find(filter)
     .sort({ createdAt: -1 })
     .populate("employee_id", "name lastname")
     .populate("services", "name price duration");
 
   return new Response(appointments, "Randevular listelendi.").success(res);
 };
+
 
 const markAsDone = async (req, res) => {
   const { id } = req.params;
