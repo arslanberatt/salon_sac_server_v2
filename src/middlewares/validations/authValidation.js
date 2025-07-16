@@ -2,7 +2,7 @@ const joi = require("joi");
 const APIError = require("../../utils/errors");
 
 class AuthValidation {
-  constructor() {}
+  constructor() { }
   static register = async (req, res, next) => {
     try {
       await joi
@@ -20,6 +20,9 @@ class AuthValidation {
           email: joi.string().email().required().messages({
             "string.email": "Geçerli bir e-posta adresi girin.",
             "any.required": "E-posta alanı zorunludur.",
+          }),
+          phone: joi.string().pattern(/^\+?[0-9]{10,15}$/).messages({
+            "string.pattern.base": "Geçerli bir telefon numarası girin.",
           }),
           password: joi.string().min(6).max(20).required().messages({
             "string.min": "Parola en az 6 karakter olmalıdır.",
