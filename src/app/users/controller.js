@@ -32,14 +32,6 @@ const updateMe = async (req, res, next) => {
       if (exists) throw new APIError("Bu e-posta zaten kayıtlı!", 400);
     }
 
-    if (body.phone) {
-      const exists = await User.findOne({
-        phone: body.phone,
-        _id: { $ne: userId },
-      });
-      if (exists) throw new APIError("Bu telefon zaten kayıtlı!", 400);
-    }
-
     if (body.password) {
       body.password = await bcrypt.hash(body.password.trim(), 10);
     }

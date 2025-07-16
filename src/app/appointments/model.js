@@ -13,7 +13,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     customer_phone: {
       type: String,
-      required: true,
+      required: false,
     },
     services: [
       {
