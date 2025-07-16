@@ -17,10 +17,6 @@ class AuthValidation {
             "string.max": "Soyad en fazla 20 karakter olmalıdır.",
             "any.required": "Soyad alanı zorunludur.",
           }),
-          phone: joi.string().length(10).required().messages({
-            "string.length": "Telefon numarası 10 karakter olmalıdır.",
-            "any.required": "Telefon alanı zorunludur.",
-          }),
           email: joi.string().email().required().messages({
             "string.email": "Geçerli bir e-posta adresi girin.",
             "any.required": "E-posta alanı zorunludur.",

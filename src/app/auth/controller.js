@@ -44,14 +44,10 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { email, phone } = req.body;
+  const { email } = req.body;
   const userCheck = await user.findOne({ email });
-  const phoneCheck = await user.findOne({ phone });
   if (userCheck) {
     throw new APIError("Bu e-posta adresi zaten kayıtlı!", 400);
-  }
-  if (phoneCheck) {
-    throw new APIError("Bu telefon numarası zaten kayıtlı!", 400);
   }
   req.body.password = await bcrypt.hash(req.body.password, 10);
 
@@ -229,10 +225,19 @@ const resetPassword = async (req, res) => {
   ).success(res);
 };
 
+const deleteMe = async (req, res) => {
+  const userId = req.user._id;
+
+  await user.findByIdAndDelete(userId);
+
+  return new Response(null, "Hesabınız başarıyla silindi.").success(res);
+};
+
 module.exports = {
   login,
   register,
   forgetPassword,
   resetCodeCheck,
   resetPassword,
+  deleteMe
 };

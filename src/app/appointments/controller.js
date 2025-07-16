@@ -32,13 +32,25 @@ const getAppointments = async (req, res) => {
     filter.employee_id = user._id;
   }
 
-  const appointments = await Appointment.find(filter)
+  let appointments = await Appointment.find(filter)
+    .sort({ createdAt: -1 })
+    .populate("employee_id", "name lastname")
+    .populate("services", "name price duration");
+
+  const invalidAppointments = appointments.filter(a => !a.employee_id);
+  for (const appt of invalidAppointments) {
+    appt.is_cancelled = true;
+    await appt.save();
+  }
+
+  appointments = await Appointment.find(filter)
     .sort({ createdAt: -1 })
     .populate("employee_id", "name lastname")
     .populate("services", "name price duration");
 
   return new Response(appointments, "Randevular listelendi.").success(res);
 };
+
 
 const markAsDone = async (req, res) => {
   const { id } = req.params;
@@ -56,6 +68,7 @@ const markAsDone = async (req, res) => {
   const rate = employee.commissionRate || 0;
   const commission = Math.floor((appointment.price * rate) / 100);
 
+  // prim ekle
   await SalaryRecord.create({
     employeeId: employee._id,
     type: "prim",
@@ -64,27 +77,29 @@ const markAsDone = async (req, res) => {
     appointment_id: appointment._id,
   });
 
-  const category = await TransactionCategory.findOne({
-    name: "Randevu geliri",
-  });
-  if (!category)
-    throw APIError.notFound("Randevu geliri kategorisi bulunamadı.");
+  // transaction ekle
+  const Transaction = require("../transactions/model");
+  const Category = require("../transactionCategories/model");
+
+  const incomeCategory = await Category.findOne({ name: "Randevu Geliri" });
+  if (!incomeCategory) throw APIError.notFound("Randevu Geliri kategorisi bulunamadı.");
 
   await Transaction.create({
-    category_id: category._id,
-    amount: appointment.price,
-    description: `${appointment.customer_name} randevusundan elde edilen gelir`,
-    user_id: employee._id,
-    appointment_id: appointment._id,
-    createdBy: req.user._id,
     type: "gelir",
+    amount: appointment.price,
+    description: `${appointment.customer_name} randevusu`,
+    date: new Date(),
+    category: incomeCategory._id,
+    createdBy: req.user._id,
+    canceled: false,
+    canceledAt: null,
+    canceledBy: null,
   });
 
-  return new Response(
-    appointment,
-    "Randevu tamamlandı, prim ve gelir kaydedildi."
-  ).success(res);
+  return new Response(appointment, "Randevu tamamlandı.").success(res);
 };
+
+
 
 const cancelAppointment = async (req, res) => {
   const { id } = req.params;
@@ -102,9 +117,32 @@ const cancelAppointment = async (req, res) => {
   return new Response(appointment, "Randevu iptal edildi.").success(res);
 };
 
+const updateAppointment = async (req, res) => {
+  const { id } = req.params;
+  const user = req.user;
+
+  const appointment = await Appointment.findById(id);
+  if (!appointment) throw APIError.notFound("Randevu bulunamadı.");
+
+  if (
+    !user.is_admin &&
+    !user.is_moderator &&
+    appointment.employee_id.toString() !== user._id.toString()
+  ) {
+    throw APIError.forbidden("Bu randevuyu güncelleme yetkiniz yok.");
+  }
+
+  Object.assign(appointment, req.body);
+  await appointment.save();
+
+  return new Response(appointment, "Randevu güncellendi.").success(res);
+};
+
+
 module.exports = {
   createAppointment,
   getAppointments,
   markAsDone,
   cancelAppointment,
+  updateAppointment
 };

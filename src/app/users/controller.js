@@ -20,7 +20,7 @@ const updateMe = async (req, res, next) => {
       const old = await User.findById(userId).select("avatar");
       if (old?.avatar && old.avatar !== "/uploads/default-avatar.png") {
         const oldPath = path.join("public", old.avatar);
-        fs.unlink(oldPath).catch(() => {});
+        fs.unlink(oldPath).catch(() => { });
       }
     }
 
@@ -31,12 +31,9 @@ const updateMe = async (req, res, next) => {
       });
       if (exists) throw new APIError("Bu e-posta zaten kayıtlı!", 400);
     }
-    if (body.phone) {
-      const exists = await User.findOne({
-        phone: body.phone,
-        _id: { $ne: userId },
-      });
-      if (exists) throw new APIError("Bu telefon zaten kayıtlı!", 400);
+
+    if (body.password) {
+      body.password = await bcrypt.hash(body.password.trim(), 10);
     }
 
     const updatedUser = await User.findByIdAndUpdate(userId, body, {
@@ -49,6 +46,7 @@ const updateMe = async (req, res, next) => {
     next(err);
   }
 };
+
 
 const updateUserByAdmin = async (req, res) => {
   if (!req.user.is_admin) throw APIError.forbidden("Yetkisiz erişim.");
@@ -80,7 +78,9 @@ const updateUserByAdmin = async (req, res) => {
 
 const getActiveUsers = async (req, res, next) => {
   try {
-    const users = await User.find({ is_admin: false, is_active: true }).select("-password -reset");
+    const users = await User.find({ is_active: true }).select(
+      "-password -reset"
+    );
     return new Response(users, "Aktif kullanıcılar listelendi").success(res);
   } catch (err) {
     next(err);
@@ -89,12 +89,19 @@ const getActiveUsers = async (req, res, next) => {
 
 const getPassiveUsers = async (req, res, next) => {
   try {
-    const users = await User.find({ is_admin: false, is_active: false }).select("-password -reset");
+    const users = await User.find({ is_admin: false, is_active: false }).select(
+      "-password -reset"
+    );
     return new Response(users, "Pasif kullanıcılar listelendi").success(res);
   } catch (err) {
     next(err);
   }
 };
 
-
-module.exports = { getMe, updateMe, updateUserByAdmin, getActiveUsers, getPassiveUsers };
+module.exports = {
+  getMe,
+  updateMe,
+  updateUserByAdmin,
+  getActiveUsers,
+  getPassiveUsers,
+};

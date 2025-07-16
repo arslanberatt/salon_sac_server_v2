@@ -2,66 +2,153 @@ const Transaction = require("./model");
 const SalaryRecord = require("../salaryRecords/model");
 const Response = require("../../utils/response");
 const APIError = require("../../utils/errors");
+const User = require("../users/model");
+const AdvanceRequest = require("../advanceRequests/model");
+const Appointment = require("../appointments/model");
+
+const getTransactions = async (req, res) => {
+  const filter = {};
+  const user = req.user;
+
+  if (!user.is_admin && !user.is_moderator) {
+    filter.user_id = user._id;
+  }
+
+  const transactions = await Transaction.find(filter)
+    .populate("category")
+    .sort({ createdAt: -1 });
+
+  console.log("Transaction listesi gönderildi:", transactions.length);
+  return new Response(transactions, "İşlemler listelendi.").success(res);
+};
 
 const addTransaction = async (req, res) => {
-  const { type, amount, description, date, user_id } = req.body;
+  const user = req.user;
+  const { type, amount, description, date, user_id, category } = req.body;
 
-  if (!type || !amount || !description) {
+  console.log("Gelen body:", req.body);
+
+  if (!type || !amount || !description || !category?._id) {
+    console.warn("Eksik alan:", { type, amount, description, category });
     throw APIError.badRequest("Gerekli alanlar eksik.");
   }
 
-  const transaction = await Transaction.create({
+  const newTransaction = new Transaction({
     type,
     amount,
     description,
     date,
     user_id,
-    createdBy: req.user._id,
+    category: category._id,
+    createdBy: user._id,
   });
 
-  return new Response(transaction, "İşlem kaydedildi.").created(res);
+  await newTransaction.save();
+
+  console.log("Yeni işlem kaydedildi:", newTransaction._id);
+  return new Response(newTransaction, "İşlem kaydedildi.").created(res);
 };
 
 const cancelTransaction = async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const transaction = await Transaction.findById(id);
 
-  const transaction = await Transaction.findById(id);
-  if (!transaction) throw APIError.notFound("İşlem bulunamadı.");
-  if (transaction.canceled) throw APIError.badRequest("Zaten iptal edilmiş.");
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "İşlem bulunamadı.",
+      });
+    }
 
-  const now = new Date();
-  const created = new Date(transaction.date);
-  const sameMonth =
-    now.getFullYear() === created.getFullYear() &&
-    now.getMonth() === created.getMonth();
+    if (transaction.canceled) {
+      return res.status(200).json({
+        success: true,
+        message: "İşlem zaten iptal edilmiş.",
+        data: transaction,
+      });
+    }
 
-  if (!sameMonth) {
-    throw APIError.badRequest(
-      "Sadece aynı ay içindeki işlemler iptal edilebilir."
-    );
-  }
+    // İşlemi iptal et
+    transaction.canceled = true;
+    transaction.canceledAt = new Date();
+    transaction.canceledBy = req.user._id;
+    await transaction.save();
 
-  transaction.canceled = true;
-  transaction.canceledAt = now;
-  transaction.canceledBy = req.user._id;
+    // eğer randevu geliri ise
+    if (transaction.description.includes("randevusu")) {
+      // ilgili randevuyu bul
+      const customerName = transaction.description.replace(" randevusu", "");
+      const appointment = await Appointment.findOne({
+        customer_name: customerName,
+        price: transaction.amount,
+        is_done: true,
+      });
 
-  await transaction.save();
+      if (appointment) {
+        // randevuyu geri al
+        appointment.is_done = false;
+        await appointment.save();
 
-  if (
-    transaction.description.toLowerCase().includes("prim") &&
-    transaction.user_id
-  ) {
-    await SalaryRecord.deleteOne({
-      employeeId: transaction.user_id,
+        await SalaryRecord.findOneAndUpdate(
+          {
+            appointment_id: appointment._id,
+            type: "prim",
+          },
+          { approved: false }
+        );
+
+        console.log("Randevu ve prim geri alındı:", appointment._id);
+      }
+    }
+
+    const isAdvance = transaction.description.includes("avansı");
+    const employeeIdRaw = transaction.description.split(" ")[0];
+
+    const salaryRecord = await SalaryRecord.findOne({
       amount: transaction.amount,
-      type: "prim",
+      description: transaction.description,
+    });
+
+    if (salaryRecord) {
+      if (isAdvance) {
+        salaryRecord.approved = false;
+        await salaryRecord.save();
+      } else {
+        await salaryRecord.deleteOne();
+      }
+    }
+
+    if (isAdvance) {
+      const advance = await AdvanceRequest.findOne({
+        employeeId: employeeIdRaw,
+        amount: transaction.amount,
+        status: "onaylandi",
+      });
+
+      if (advance) {
+        advance.status = "reddedildi";
+        await advance.save();
+        console.log("Advance status reset:", advance._id);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "İşlem iptal edildi.",
+      data: transaction,
+    });
+  } catch (error) {
+    console.error("İptal hatası:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
-
-  return new Response(transaction, "İşlem iptal edildi.").success(res);
 };
 
 module.exports = {
   addTransaction,
   cancelTransaction,
+  getTransactions,
 };
