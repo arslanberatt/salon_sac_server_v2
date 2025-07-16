@@ -21,7 +21,7 @@ class AuthValidation {
             "string.email": "Geçerli bir e-posta adresi girin.",
             "any.required": "E-posta alanı zorunludur.",
           }),
-          phone: joi.string().pattern(/^\+?[0-9]{10,15}$/).messages({
+          phone: joi.string().pattern(/^\+?[0-9]{10,15}$/).optional().allow('').messages({
             "string.pattern.base": "Geçerli bir telefon numarası girin.",
           }),
           password: joi.string().min(6).max(20).required().messages({
